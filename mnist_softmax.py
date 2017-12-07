@@ -25,7 +25,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from tensorflow.examples.tutorials.mnist import input_data
+import mnist as input_data
 
 import tensorflow as tf
 
