@@ -30,12 +30,15 @@ import argparse
 import sys
 import tempfile
 
-from tensorflow.examples.tutorials.mnist import input_data
+import numpy as np
+import mnist as input_data
 
 import tensorflow as tf
 
 FLAGS = None
 
+BATCH_SIZE = 10
+NUMBER_OF_EPOCHES = 30
 
 def deepnn(x):
   """deepnn builds the graph for a deep net for classifying digits.
@@ -93,8 +96,8 @@ def deepnn(x):
 
   # Map the 1024 features to 10 classes, one for each digit
   with tf.name_scope('fc2'):
-    W_fc2 = weight_variable([1024, 10])
-    b_fc2 = bias_variable([10])
+    W_fc2 = weight_variable([1024, 62])
+    b_fc2 = bias_variable([62])
 
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
   return y_conv, keep_prob
@@ -125,13 +128,15 @@ def bias_variable(shape):
 
 def main(_):
   # Import data
-  mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+  mnist = input_data.read_data_sets('data/Char', one_hot=True)
+  print ("CHECKING" , np.array(mnist.train.images).shape, np.array(mnist.train.labels).shape)
+  print ("CHECKING" , np.array(mnist.test.images).shape, np.array(mnist.test.labels).shape)
 
   # Create the model
   x = tf.placeholder(tf.float32, [None, 784])
 
   # Define loss and optimizer
-  y_ = tf.placeholder(tf.float32, [None, 10])
+  y_ = tf.placeholder(tf.float32, [None, 62])
 
   # Build the graph for the deep net
   y_conv, keep_prob = deepnn(x)
@@ -156,16 +161,36 @@ def main(_):
 
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    for i in range(20000):
-      batch = mnist.train.next_batch(50)
-      if i % 100 == 0:
-        train_accuracy = accuracy.eval(feed_dict={
-            x: batch[0], y_: batch[1], keep_prob: 1.0})
-        print('step %d, training accuracy %g' % (i, train_accuracy))
-      train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+    epoch_num = 0
 
-    print('test accuracy %g' % accuracy.eval(feed_dict={
-        x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+    for e in range(NUMBER_OF_EPOCHES):
+        # One epoch training.
+        acc_train = []
+        number_of_batches = int(len(mnist.train.images) / BATCH_SIZE)
+
+        for i in range(number_of_batches):
+            batch = mnist.train.next_batch(BATCH_SIZE)
+            train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+            train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
+            acc_train.append(train_accuracy)
+            # print('step %d, training accuracy %g' % (i, train_accuracy))
+
+        print("Epoch ", epoch_num, ", Training accuracy is ", sum(acc_train) / len(acc_train), "%\n");
+
+        # One epoch testing.
+        acc_test = []
+        number_of_test_batches = int(len(mnist.test.images) / BATCH_SIZE)
+
+        for i in range(number_of_test_batches):
+            batch = mnist.test.next_batch(BATCH_SIZE)
+            acc_test.append(accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0}))
+
+        print("Epoch ", epoch_num, ", Testing accuracy is ", sum(acc_test) / len(acc_test), "%\n");
+        epoch_num += 1
+
+    # print('test accuracy %g' % accuracy.eval(feed_dict={
+    #     x: mnist.test.images[0:1000,1], y_: mnist.test.labels[0:1000,1], keep_prob: 1.0}))
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

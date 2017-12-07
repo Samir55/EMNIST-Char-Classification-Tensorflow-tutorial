@@ -75,7 +75,7 @@ def dense_to_one_hot(labels_dense, num_classes):
   return labels_one_hot
 
 
-def extract_labels(f, one_hot=False, num_classes=10):
+def extract_labels(f, one_hot=False, num_classes=62):
   """Extract the labels into a 1D uint8 numpy array [index].
 
   Args:
