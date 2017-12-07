@@ -29,11 +29,17 @@ from __future__ import print_function
 import argparse
 import sys
 import tempfile
-
-import numpy as np
-import mnist as input_data
+import os
+from os import listdir
+from os.path import isfile, join, basename
 
 import tensorflow as tf
+import numpy as np
+import scipy.misc as sp
+import math
+
+import mnist as input_data
+from PIL import Image
 #import matplotlib.pyplot as plt
 
 FLAGS = None
@@ -42,9 +48,48 @@ NUM_CLASSES = 62
 DATASET_PATH = 'data/Char'
 
 BATCH_SIZE = 10
-NUMBER_OF_EPOCHES = 4
 
 keep_prob = tf.placeholder(tf.float32)
+
+CHARACTERS_PATH = "chars/"
+def read_dict(filename, sep):
+    with open(filename, "r") as f:
+        dict = {}
+        for line in f:
+            values = line.split(sep)
+            for x in values[1:len(values)]:
+              dict[int(values[0])] = int(x)
+        return(dict)
+
+def prepare_input_character_image(path, invert):
+
+    # Import the image
+    x = Image.open(path, 'r')
+
+    # Transform x to meet neural network specs
+    x = np.rot90(np.fliplr(np.array(x)))
+    
+    # Invert colors
+    if (invert): x = 255 - x
+
+    # Resize to match dataset
+    rows = len(x)
+    cols = len(x[0])
+
+    if (rows > cols):
+      ratio = 20.0/rows
+      new_dimes = 20, int(cols * ratio)
+    else:
+      ratio = 20.0/cols
+      new_dimes = int(rows * ratio), 20
+      
+    x = sp.imresize(x, new_dimes, 'nearest', 'L')
+
+    out = np.zeros((28,28), dtype=np.int)
+    out[14-int(math.floor(new_dimes[0]/2.0)):14+int(math.ceil(new_dimes[0]/2.0)), 14-int(math.floor(new_dimes[1]/2.0)):14+int(math.ceil(new_dimes[1]/2.0))] = x
+
+    y = out.reshape((28 * 28, -1)).astype(np.float32)/255.0
+    return y
 
 def deepnn(x):
   """deepnn builds the graph for a deep net for classifying digits.
@@ -107,8 +152,6 @@ def deepnn(x):
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
   return y_conv
 
-def find_predicted (x):
-  return tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
 def conv2d(x, W):
   """conv2d returns a 2d convolution layer with full stride."""
@@ -135,9 +178,9 @@ def bias_variable(shape):
 
 def main(_):
   # Import data
-  mnist = input_data.read_data_sets(DATASET_PATH, one_hot=True)
-  print ("CHECKING" , np.array(mnist.train.images).shape, np.array(mnist.train.labels).shape)
-  print ("CHECKING" , np.array(mnist.test.images).shape, np.array(mnist.test.labels).shape)
+  #mnist = input_data.read_data_sets(DATASET_PATH, one_hot=True)
+  #print ("CHECKING" , np.array(mnist.train.images).shape, np.array(mnist.train.labels).shape)
+  #print ("CHECKING" , np.array(mnist.test.images).shape, np.array(mnist.test.labels).shape)
 
   # Create the model
   x = tf.placeholder(tf.float32, [None, 784])
@@ -148,61 +191,39 @@ def main(_):
   # Build the graph for the deep net
   y_conv = deepnn(x)
 
-  with tf.name_scope('loss'):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_,
-                                                            logits=y_conv)
-  cross_entropy = tf.reduce_mean(cross_entropy)
-
-  with tf.name_scope('adam_optimizer'):
-    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-
-  with tf.name_scope('accuracy'):
-    correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-    correct_prediction = tf.cast(correct_prediction, tf.float32)
-  accuracy = tf.reduce_mean(correct_prediction)
-
-  graph_location = "graphs/"
-  print('Saving graph to: %s' % graph_location)
-  train_writer = tf.summary.FileWriter(graph_location)
-  train_writer.add_graph(tf.get_default_graph())
-
-  # Save the model.
   saver = tf.train.Saver()
 
+  # Read char mappings
+  char_map = read_dict("char_map.txt", ' ')
+
   with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    epoch_num = 1
+      # First let's load meta graph and restore weights
+      saver.restore(sess, "checkpoints/model.ckpt-1")
 
-    for e in range(NUMBER_OF_EPOCHES):
-        # One epoch training.
-        acc_train = []
-        number_of_batches = int(len(mnist.train.images) / BATCH_SIZE)
+      # # Test a character image.
+      # np.set_printoptions(linewidth=250)
+      # a = mnist.train.next_batch(1)
+      # char_image = a
 
-        for i in range(number_of_batches):
-            batch = mnist.train.next_batch(BATCH_SIZE)
-            train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
-            train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
-            acc_train.append(train_accuracy)
-            # print('step %d, training accuracy %g' % (i, train_accuracy))
+      # Load a new character.
+      np.set_printoptions(linewidth=250)
+      a = prepare_input_character_image(CHARACTERS_PATH + str('4.png'), True)
+      tensor = np.asarray(a)
+      tensor = tensor.reshape(1, 784)
+      char_image = a
+      # print (np.array(a).shape
+      #label = 4
 
-        print("Epoch ", epoch_num, ", Training accuracy is ", sum(acc_train) / len(acc_train), "%");
-
-        # One epoch testing.
-        acc_test = []
-        number_of_test_batches = int(len(mnist.test.images) / BATCH_SIZE)
-
-        for i in range(number_of_test_batches):
-            batch = mnist.test.next_batch(BATCH_SIZE)
-            acc_test.append(accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0}))
-
-        print("Epoch ", epoch_num, ", Testing accuracy is ", sum(acc_test) / len(acc_test), "%");
-
-        # Save the model.
-        save_path = saver.save(sess, 'checkpoints/model.ckpt', global_step = epoch_num)
-        print("Checkpoint saved in file: %s" % save_path)
-
-        epoch_num += 1
-
+      # Reshape into 28x28 from 1x784
+      char_image = (np.array(char_image).reshape(28, 28)) * int(255)
+      char_image = np.array(char_image, dtype=int)
+      
+      # Inverse Transformations
+      char_image = np.flip(char_image, axis = 0) # Inverse flip at axis 0.
+      char_image = np.rot90(char_image,3) # Rotate 270 counter clock-wise
+      
+      #print ("Image is " , char_image , "Correct Label is", label)
+      print ("Predicted value for image 0 is ", chr(char_map[np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1)[0]]))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

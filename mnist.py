@@ -32,6 +32,7 @@ from tensorflow.python.platform import gfile
 # CVDF mirror of http://yann.lecun.com/exdb/mnist/
 DEFAULT_SOURCE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/'
 
+NUM_CLASSES = 62
 
 def _read32(bytestream):
   dt = numpy.dtype(numpy.uint32).newbyteorder('>')
@@ -75,7 +76,7 @@ def dense_to_one_hot(labels_dense, num_classes):
   return labels_one_hot
 
 
-def extract_labels(f, one_hot=False, num_classes=62):
+def extract_labels(f, one_hot=False, num_classes=NUM_CLASSES):
   """Extract the labels into a 1D uint8 numpy array [index].
 
   Args:
