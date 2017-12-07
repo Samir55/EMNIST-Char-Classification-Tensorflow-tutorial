@@ -42,7 +42,7 @@ NUM_CLASSES = 33
 DATASET_PATH = '../data/Symbols'
 
 BATCH_SIZE = 10
-NUMBER_OF_EPOCHES = 4
+NUMBER_OF_EPOCHES = 10
 
 keep_prob = tf.placeholder(tf.float32)
 

@@ -72,11 +72,15 @@ def add_chars(training_set, training_results, test_set, test_results):
       # Append to dataset
       training_set.append(img)
       char_map[87] = 31
-      training_results.append(char_map[87])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[87]] = 1
+      training_results.append(a)
     else:
       # Append to testset
       test_set.append(img)
-      test_results.append(char_map[87])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[87]] = 1
+      test_results.append(a)
 
     i+=1
   
@@ -99,10 +103,14 @@ def add_chars(training_set, training_results, test_set, test_results):
 
     if (i < (5.0/6) * cnt):
       training_set.append(img)
-      training_results.append(char_map[87])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[87]] = 1
+      training_results.append(a)
     else:
       test_set.append(img)
-      test_results.append(char_map[87])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[87]] = 1
+      test_results.append(a)
     i+=1
     
   cnt = len(listdir((PATH + 'dash')))
@@ -132,11 +140,15 @@ def add_chars(training_set, training_results, test_set, test_results):
       # Append to dataset
       training_set.append(img)
       char_map[88] = 32
-      training_results.append(char_map[88])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[88]] = 1
+      training_results.append(a)
     else:
       # Append to testset
       test_set.append(img)
-      test_results.append(char_map[88])
+      a = np.zeros(NUM_CLASSES)
+      a[char_map[88]] = 1
+      test_results.append(a)
     i+=1
   return training_set, training_results, test_set, test_results
 
@@ -264,12 +276,17 @@ def add_special_chars_to_training_set(training_set, training_results, test_set, 
 
       if (i < (5.0/6) * cnt):
         training_set.append(img)
-        training_results.append(symbolKey)
+        a = np.zeros(NUM_CLASSES)
+        a[char_map[symbolKey]] = 1
+        training_results.append(a)
       else:
         # Append to testset
         test_set.append(img)
-        test_results.append(symbolKey)
+        a = np.zeros(NUM_CLASSES)
+        a[char_map[symbolKey]] = 1
+        test_results.append(a)
       i+=1
+  
   return training_set, training_results, test_set, test_results
 
 def dense_to_one_hot(labels_dense, num_classes = NUM_CLASSES):
@@ -374,14 +391,17 @@ def read_data_sets(train_dir = "",
 
   train_images = np.array(train_images).reshape([train_len, 784])
   test_images = np.array(test_images).reshape([test_len, 784])
-  print  (len(test_labels), np.array(test_images).shape, np.array(train_images).shape, np.array(test_labels).shape, np.array(test_labels).shape[0])
+
+  train_labels = np.array(train_labels).reshape([train_len, NUM_CLASSES])
+  test_labels = np.array(test_labels).reshape([test_len, NUM_CLASSES])
+  #print  (len(test_labels), np.array(test_images).shape, np.array(train_images).shape, np.array(test_labels).shape, np.array(test_labels).shape[0])
 
   # Convert labels to one_hot vectors.
   train_labels = np.array(train_labels)
   test_labels = np.array(test_labels)
 
-  test_labels = dense_to_one_hot(test_labels, NUM_CLASSES)
-  train_labels = dense_to_one_hot(train_labels, NUM_CLASSES)
+  #test_labels = dense_to_one_hot(test_labels, NUM_CLASSES)
+  #train_labels = dense_to_one_hot(train_labels, NUM_CLASSES)
 
   options = dict(dtype=dtype, reshape=reshape, seed=seed)
 
