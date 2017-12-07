@@ -38,8 +38,8 @@ import tensorflow as tf
 
 FLAGS = None
 
-NUM_CLASSES = 62
-DATASET_PATH = 'data/Char'
+NUM_CLASSES = 33
+DATASET_PATH = '../data/Symbols'
 
 BATCH_SIZE = 10
 NUMBER_OF_EPOCHES = 4
