@@ -135,6 +135,9 @@ def main(_):
   # Define loss and optimizer
   y_ = tf.placeholder(tf.float32, [None, 10])
 
+  # Created for testing.
+  predicted = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+
   # Build the graph for the deep net
   y_conv= deepnn(x)
 

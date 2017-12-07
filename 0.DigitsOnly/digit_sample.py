@@ -30,20 +30,14 @@ import argparse
 import sys
 import tempfile
 
-import numpy as np
-import mnist as input_data
+from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
-#import matplotlib.pyplot as plt
+import numpy as np
 
 FLAGS = None
 
-NUM_CLASSES = 62
-DATASET_PATH = 'data/Char'
-
-BATCH_SIZE = 10
-NUMBER_OF_EPOCHES = 4
-
+NUM_CLASSES = 10
 keep_prob = tf.placeholder(tf.float32)
 
 def deepnn(x):
@@ -101,14 +95,12 @@ def deepnn(x):
 
   # Map the 1024 features to 10 classes, one for each digit
   with tf.name_scope('fc2'):
-    W_fc2 = weight_variable([1024, NUM_CLASSES])
-    b_fc2 = bias_variable([NUM_CLASSES])
+    W_fc2 = weight_variable([1024, 10])
+    b_fc2 = bias_variable([10])
 
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
   return y_conv
 
-def find_predicted (x):
-  return tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
 def conv2d(x, W):
   """conv2d returns a 2d convolution layer with full stride."""
@@ -135,74 +127,35 @@ def bias_variable(shape):
 
 def main(_):
   # Import data
-  mnist = input_data.read_data_sets(DATASET_PATH, one_hot=True)
-  print ("CHECKING" , np.array(mnist.train.images).shape, np.array(mnist.train.labels).shape)
-  print ("CHECKING" , np.array(mnist.test.images).shape, np.array(mnist.test.labels).shape)
+  mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
   # Create the model
   x = tf.placeholder(tf.float32, [None, 784])
 
   # Define loss and optimizer
-  y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+  y_ = tf.placeholder(tf.float32, [None, 10])
 
   # Build the graph for the deep net
-  y_conv = deepnn(x)
+  y_conv= deepnn(x)
 
-  with tf.name_scope('loss'):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_,
-                                                            logits=y_conv)
-  cross_entropy = tf.reduce_mean(cross_entropy)
-
-  with tf.name_scope('adam_optimizer'):
-    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-
-  with tf.name_scope('accuracy'):
-    correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-    correct_prediction = tf.cast(correct_prediction, tf.float32)
-  accuracy = tf.reduce_mean(correct_prediction)
-
-  graph_location = "graphs/"
-  print('Saving graph to: %s' % graph_location)
-  train_writer = tf.summary.FileWriter(graph_location)
-  train_writer.add_graph(tf.get_default_graph())
-
-  # Save the model.
   saver = tf.train.Saver()
 
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    epoch_num = 1
+    # First let's load meta graph and restore weights
+    saver.restore(sess, "digitscheckpoints/model.ckpt")
 
-    for e in range(NUMBER_OF_EPOCHES):
-        # One epoch training.
-        acc_train = []
-        number_of_batches = int(len(mnist.train.images) / BATCH_SIZE)
+    # Test a character image.
+    a = mnist.train.next_batch(1)
+    np.set_printoptions(linewidth=250)
+    char_image = a[0]
 
-        for i in range(number_of_batches):
-            batch = mnist.train.next_batch(BATCH_SIZE)
-            train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
-            train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
-            acc_train.append(train_accuracy)
-            # print('step %d, training accuracy %g' % (i, train_accuracy))
-
-        print("Epoch ", epoch_num, ", Training accuracy is ", sum(acc_train) / len(acc_train), "%");
-
-        # One epoch testing.
-        acc_test = []
-        number_of_test_batches = int(len(mnist.test.images) / BATCH_SIZE)
-
-        for i in range(number_of_test_batches):
-            batch = mnist.test.next_batch(BATCH_SIZE)
-            acc_test.append(accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0}))
-
-        print("Epoch ", epoch_num, ", Testing accuracy is ", sum(acc_test) / len(acc_test), "%");
-
-        # Save the model.
-        save_path = saver.save(sess, 'checkpoints/model.ckpt', global_step = 1)
-        print("Checkpoint saved in file: %s" % save_path)
-
-        epoch_num += 1
-
+    # Reshape into 28x28 from 1x784
+    char_image = np.array(char_image.reshape(28, 28)) * int(255)
+    char_image = np.array(char_image, dtype=int)
+  
+    print ("Image is " , char_image , "Correct Label is", np.argmax(a[1], axis =  1))
+    print ("Predicted value for image 0 is ", np.argmax(sess.run(y_conv, {x: a[0], keep_prob: 1.0}), axis = 1))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
