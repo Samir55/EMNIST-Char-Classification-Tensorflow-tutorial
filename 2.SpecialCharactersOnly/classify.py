@@ -52,7 +52,7 @@ BATCH_SIZE = 10
 keep_prob = tf.placeholder(tf.float32)
 
 CHARACTERS_PATH = "../chars/"
-PATH = 'out/Output1/Characters/'
+PATH = 'out/Characters/'
 def read_dict(filename, sep):
     with open(filename, "r") as f:
         dict = {}
@@ -97,7 +97,7 @@ def get_files_list(path, remove_ext = False):
   for t in (listdir(path)):
     if (not isinstance(t, int) and t[0] == '.'): continue
     if (remove_ext): li.append(int(t.split('.')[0]))
-    else : li.append(t)
+    else : li.append(int(t))
   return li
 
 def deepnn(x):
@@ -211,22 +211,24 @@ def main(_):
 
       code = ""
       for line in sorted(np.array(get_files_list(PATH))):
+        l = ''
         for word in sorted(np.array(get_files_list(PATH+str(line)+"/"))):
           for char in sorted(np.array(get_files_list(PATH+str(line)+"/"+str(word)+"/", True))):
             a = prepare_input_character_image(PATH+str(line)+"/"+str(word)+"/"+str(char)+".jpg", True)
             tensor = np.asarray(a)
             tensor = tensor.reshape(1, 784)
             res = np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1)
-            print (chr((char_map[res[0]])), line, " ", word)
-            # code += chr((char_map[res[0]]))
-            # print(code)
+            #print (res ,chr((char_map[res[0]])), line, " ", word)
+            c = chr((char_map[res[0]]))
+            if (chr((char_map[res[0]])) == 'W'):
+             c = '^'
+            code += c
+            l += c
             # print (PATH+str(line)+"/"+str(word)+"/"+str(char)+".jpg", chr(char_map[(np.argmax(res))]), (-res).argpartition(10, axis=None)[:10])
-
-          print (' ')
+          l += ' '
           code += ' '
-
-        print('\n')
-      code += '\n'
+        print(l, '\n')
+        code += '\n'
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
