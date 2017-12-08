@@ -308,8 +308,8 @@ class DataSet(object):
                reshape=True,
                seed=None):
     self._images = np.array(images)
-    self.images = self.images.astype(numpy.float32)
-    self.images = numpy.multiply(self.images, 1.0 / 255.0)
+    self._images = self._images.astype(numpy.float32)
+    self._images = numpy.multiply(self._images, 1.0 / 255.0)
     self._num_examples = self.images.shape[0]
     print("NUMBER OF EXAMPLES ", self._num_examples)
     self._labels = labels
