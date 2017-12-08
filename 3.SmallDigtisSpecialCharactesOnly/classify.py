@@ -44,14 +44,15 @@ from PIL import Image
 
 FLAGS = None
 
-NUM_CLASSES = 33
+NUM_CLASSES = 69
 DATASET_PATH = '../data/Char'
-
 BATCH_SIZE = 10
 
 keep_prob = tf.placeholder(tf.float32)
 
 CHARACTERS_PATH = "../chars/"
+PATH = 'out/Output1/Characters/'
+
 def read_dict(filename, sep):
     with open(filename, "r") as f:
         dict = {}
@@ -90,6 +91,14 @@ def prepare_input_character_image(path, invert):
 
     y = out.reshape((28 * 28, -1)).astype(np.float32)/255.0
     return y
+
+def get_files_list(path, remove_ext = False):
+  li = list()
+  for t in (listdir(path)):
+    if (not isinstance(t, int) and t[0] == '.'): continue
+    if (remove_ext): li.append(int(t.split('.')[0]))
+    else : li.append(t)
+  return li
 
 def deepnn(x):
   """deepnn builds the graph for a deep net for classifying digits.
@@ -152,29 +161,24 @@ def deepnn(x):
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
   return y_conv
 
-
 def conv2d(x, W):
   """conv2d returns a 2d convolution layer with full stride."""
   return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-
 
 def max_pool_2x2(x):
   """max_pool_2x2 downsamples a feature map by 2X."""
   return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME')
 
-
 def weight_variable(shape):
   """weight_variable generates a weight variable of a given shape."""
   initial = tf.truncated_normal(shape, stddev=0.1)
   return tf.Variable(initial)
 
-
 def bias_variable(shape):
   """bias_variable generates a bias variable of a given shape."""
   initial = tf.constant(0.1, shape=shape)
   return tf.Variable(initial)
-
 
 def main(_):
   # Import data
@@ -200,29 +204,24 @@ def main(_):
       # First let's load meta graph and restore weights
       saver.restore(sess, "checkpoints/model.ckpt-1")
 
-      # # Test a character image.
-      # np.set_printoptions(linewidth=250)
-      # a = mnist.train.next_batch(1)
-      # char_image = a
+      code = ""
+      for line in sorted(np.array(get_files_list(PATH))):
+        for word in sorted(np.array(get_files_list(PATH+str(line)+"/"))):
+          for char in sorted(np.array(get_files_list(PATH+str(line)+"/"+str(word)+"/", True))):
+            a = prepare_input_character_image(PATH+str(line)+"/"+str(word)+"/"+str(char)+".jpg", True)
+            tensor = np.asarray(a)
+            tensor = tensor.reshape(1, 784)
+            res = np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1)
+            print (chr((char_map[res[0]])), line, " ", word)
+            # code += chr((char_map[res[0]]))
+            # print(code)
+            # print (PATH+str(line)+"/"+str(word)+"/"+str(char)+".jpg", chr(char_map[(np.argmax(res))]), (-res).argpartition(10, axis=None)[:10])
 
-      # Load a new character.
-      np.set_printoptions(linewidth=250)
-      a = prepare_input_character_image(CHARACTERS_PATH + str('{.jpg'), True)
-      tensor = np.asarray(a)
-      tensor = tensor.reshape(1, 784)
-      char_image = a
-      # print (np.array(a).shape
+          print (' ')
+          code += ' '
 
-      # Reshape into 28x28 from 1x784
-      char_image = (np.array(char_image).reshape(28, 28)) * int(255)
-      char_image = np.array(char_image, dtype=int)
-      
-      # Inverse Transformations
-      char_image = np.flip(char_image, axis = 0) # Inverse flip at axis 0.
-      char_image = np.rot90(char_image,3) # Rotate 270 counter clock-wise
-      
-      print ("Image is " , char_image)
-      print ("Predicted value for image 0 is ", np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1))
+        print('\n')
+      code += '\n'
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
