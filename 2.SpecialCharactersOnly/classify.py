@@ -220,8 +220,6 @@ def main(_):
             res = np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1)
             #print (res ,chr((char_map[res[0]])), line, " ", word)
             c = chr((char_map[res[0]]))
-            if (chr((char_map[res[0]])) == 'W'):
-             c = '^'
             code += c
             l += c
             # print (PATH+str(line)+"/"+str(word)+"/"+str(char)+".jpg", chr(char_map[(np.argmax(res))]), (-res).argpartition(10, axis=None)[:10])

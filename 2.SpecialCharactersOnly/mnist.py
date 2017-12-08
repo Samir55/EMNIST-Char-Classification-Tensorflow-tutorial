@@ -242,10 +242,10 @@ def add_special_chars_to_training_set(training_set, training_results, test_set, 
         symbolKey = 41
         char_map[symbolKey] = 19
       elif (symbol == 'lcb'):
-        symbolKey = 125
+        symbolKey = 123
         char_map[symbolKey] = 20
       elif (symbol == 'rcb'):
-        symbolKey = 123
+        symbolKey = 125
         char_map[symbolKey] = 21
       elif (symbol == 'rsb'):
         symbolKey = 93
