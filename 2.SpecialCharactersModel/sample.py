@@ -207,12 +207,11 @@ def main(_):
 
       # Load a new character.
       np.set_printoptions(linewidth=250)
-      a = prepare_input_character_image(CHARACTERS_PATH + str('(.jpg'), True)
+      a = prepare_input_character_image(CHARACTERS_PATH + str('{.jpg'), True)
       tensor = np.asarray(a)
       tensor = tensor.reshape(1, 784)
       char_image = a
       # print (np.array(a).shape
-      label = 4
 
       # Reshape into 28x28 from 1x784
       char_image = (np.array(char_image).reshape(28, 28)) * int(255)
@@ -222,7 +221,7 @@ def main(_):
       char_image = np.flip(char_image, axis = 0) # Inverse flip at axis 0.
       char_image = np.rot90(char_image,3) # Rotate 270 counter clock-wise
       
-      print ("Image is " , char_image , "Correct Label is", label)
+      print ("Image is " , char_image)
       print ("Predicted value for image 0 is ", np.argmax(sess.run(y_conv, {x: tensor, keep_prob: 1.0}), axis = 1))
 
 if __name__ == '__main__':
