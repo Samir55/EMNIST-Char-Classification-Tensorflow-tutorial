@@ -39,10 +39,10 @@ import tensorflow as tf
 FLAGS = None
 
 NUM_CLASSES = 62
-DATASET_PATH = 'data/Char'
+DATASET_PATH = '../data/Char'
 
 BATCH_SIZE = 10
-NUMBER_OF_EPOCHES = 4
+NUMBER_OF_EPOCHES = 40
 
 keep_prob = tf.placeholder(tf.float32)
 
