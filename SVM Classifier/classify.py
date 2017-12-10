@@ -112,6 +112,7 @@ for line in sorted(np.array(get_files_list(PATH))):
             res = clf.predict(np.array(a).reshape(1, 784))
             c = chr((char_map[res[0]]))
             code += c
+            print(str(word) + "/" + str(char) + ".jpg", ' ', c)
             l += c
         l += ' '
         code += ' '
